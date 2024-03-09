@@ -16,7 +16,7 @@
 #include <xdp/prog_dispatcher.h>
 
 #include "xdpfw.h"
-
+#define __EBP__
 #ifndef memcpy
 #define memcpy(dest, src, n) __builtin_memcpy((dest), (src), (n))
 #endif
@@ -530,6 +530,13 @@ int xdp_prog_main(struct xdp_md *ctx)
                 continue;
             }
 
+            //bpf_printk("UDP PACKET SOURCE PORT: %d. dPORT: %d LENGTH: %d \n", htons(udph->source), htons(udph->dest), htons(udph->len));
+            
+            //bpf_printk("UDP CHECKSUM: 0x%x\n", ntohs(data_end));
+
+            //bpf_printk("D: %d. D: %d \n", udph->dest, htons(filter->udpopts.dport));
+            // Source port.
+
             // Source port.
             if (filter->udpopts.do_sport && htons(filter->udpopts.sport) != udph->source)
             {
@@ -540,6 +547,16 @@ int xdp_prog_main(struct xdp_md *ctx)
             if (filter->udpopts.do_dport && htons(filter->udpopts.dport) != udph->dest)
             {
 
+                continue;
+            }
+
+            if (filter->udpopts.do_max_len && filter->udpopts.max_len < ntohs(udph->len))
+            {
+                continue;
+            }
+
+            if (filter->udpopts.do_min_len && filter->udpopts.min_len > ntohs(udph->len))
+            {
                 continue;
             }
         }

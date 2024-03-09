@@ -76,6 +76,10 @@ void setcfgdefaults(struct config *cfg)
         cfg->filters[i].udpopts.enabled = 0;
         cfg->filters[i].udpopts.do_sport = 0;
         cfg->filters[i].udpopts.do_dport = 0;
+        cfg->filters[i].udpopts.do_max_len = 0;
+        cfg->filters[i].udpopts.max_len = 65535;
+        cfg->filters[i].udpopts.do_min_len = 0;
+        cfg->filters[i].udpopts.min_len = 0;
 
         cfg->filters[i].icmpopts.enabled = 0;
         cfg->filters[i].icmpopts.do_code = 0;
@@ -470,6 +474,24 @@ int readcfg(struct config *cfg)
         {
             cfg->filters[i].udpopts.dport = (__u16)udpdport;
             cfg->filters[i].udpopts.do_dport = 1;
+        }
+
+        // UDP Minimum length (not required).
+        int udp_min_len;
+
+        if (config_setting_lookup_int(filter, "udp_min_len", &udp_min_len))
+        {
+            cfg->filters[i].udpopts.min_len = udp_min_len;
+            cfg->filters[i].udpopts.do_min_len = 1;
+        }
+
+        // UDP Maximum length (not required).
+        int udp_max_len;
+
+        if (config_setting_lookup_int(filter, "udp_max_len", &udp_max_len))
+        {
+            cfg->filters[i].udpopts.max_len = udp_max_len;
+            cfg->filters[i].udpopts.do_max_len = 1;
         }
 
         /* ICMP options */

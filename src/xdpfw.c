@@ -16,8 +16,8 @@
 #include <linux/if_link.h>
 #include <arpa/inet.h>
 
-#include <bpf.h>
-#include <libbpf.h>
+//#include <bpf.h>
+//#include <libbpf.h>
 #include <xdp/libxdp.h>
 
 #include "xdpfw.h"
@@ -401,8 +401,11 @@ int main(int argc, char *argv[])
             fprintf(stdout, "\tUDP Options\n");
             fprintf(stdout, "\t\tUDP Enabled => %d\n", cfg.filters[i].udpopts.enabled);
             fprintf(stdout, "\t\tUDP Source Port => %d\n", cfg.filters[i].udpopts.sport);
-            fprintf(stdout, "\t\tUDP Destination Port => %d\n\n", cfg.filters[i].udpopts.dport);
+            fprintf(stdout, "\t\tUDP Destination Port => %d\n", cfg.filters[i].udpopts.dport);
+            fprintf(stdout, "\t\tUDP Max Length => %d\n", cfg.filters[i].udpopts.max_len);
+            fprintf(stdout, "\t\tUDP Min Length => %d\n\n", cfg.filters[i].udpopts.min_len);
 
+            
             // ICMP Options.
             fprintf(stdout, "\tICMP Options\n");
             fprintf(stdout, "\t\tICMP Enabled => %d\n", cfg.filters[i].icmpopts.enabled);

@@ -124,6 +124,11 @@ filters = (
 );
 ```
 
+DEBUGING LOG FOR bpf_printk() USE: 
+```bash
+sudo cat /sys/kernel/debug/tracing/trace_pipe
+``` 
+
 ## Building & Installation
 Before building, ensure the following packages are installed. These packages are installed via `apt` (Ubuntu, Debian, etc.), but there should be similar package names in other package managers.
 

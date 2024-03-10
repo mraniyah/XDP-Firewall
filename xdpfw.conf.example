@@ -1,9 +1,18 @@
-interface = "ens18";
-updatetime = 15;
+interface = "enp0s3";
+updatetime = 0;
+nostats = false;
 
 filters = (
+
     {
         enabled = true,
-        action = 1
+        action = 1,
+
+        udp_enabled = true,
+        udp_dport = 2052,
+        udp_max_len = 1000,
+        udp_min_len = 10,
+        udp_hex_enabled = true
     }
+
 );

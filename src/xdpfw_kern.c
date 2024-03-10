@@ -563,7 +563,6 @@ int xdp_prog_main(struct xdp_md *ctx)
             // Destination port.
             if (filter->udpopts.do_dport && htons(filter->udpopts.dport) != udph->dest)
             {
-
                 continue;
             }
 
@@ -579,32 +578,22 @@ int xdp_prog_main(struct xdp_md *ctx)
 
 
             if (filter->udpopts.udp_hex_enabled) {
-                
                 if (hexa[1][2]<=payload_size){
-                    bpf_printk("Packet Size: %d", payload_size);
-                    
                     // First Check
                     if (hexa[0][0]){
                         if (hexa[0][0] != payload[(hexa[1][0])]) {
-                            bpf_printk("Not Matched HEXA: %x || Payload: %x", hexa[0][0], payload[(hexa[1][0])]);
                             continue;
                         }
                     }
-                    
-                
                     // Second Check
                     if (hexa[0][1]){
                         if (hexa[0][1] != payload[(hexa[1][1])]) {
-                            bpf_printk("Not Matched HEXA: %x || Payload: %x", hexa[0][1], payload[(hexa[1][1])]);
                             continue;
                         }
                     }
-
-                    
                     // Third Check
                     if (hexa[0][2]){
                         if (hexa[0][2] != payload[(hexa[1][2])]) {
-                            bpf_printk("Not Matched HEXA: %x || Payload: %x", hexa[0][2], payload[(hexa[1][2])]);
                             continue;
                         }
                     }

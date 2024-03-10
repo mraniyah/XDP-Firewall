@@ -15,11 +15,21 @@
 #include <xdp/xdp_helpers.h>
 #include <xdp/prog_dispatcher.h>
 
+// NEW
+#include <bpf/bpf_helpers.h>
+//#include <linux/err.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <string.h>
+#include <linux/perf_event.h>
+#include "pattern.h"
+
 #include "xdpfw.h"
 #define __EBP__
 #ifndef memcpy
 #define memcpy(dest, src, n) __builtin_memcpy((dest), (src), (n))
 #endif
+
 
 struct 
 {
@@ -75,6 +85,9 @@ struct
     __type(value, __u64);
 } ip6_blacklist_map SEC(".maps");
 
+
+
+
 SEC("xdp_prog")
 int xdp_prog_main(struct xdp_md *ctx)
 {
@@ -84,6 +97,7 @@ int xdp_prog_main(struct xdp_md *ctx)
 
     // Scan ethernet header.
     struct ethhdr *eth = data;
+
 
     // Check if the ethernet header is valid.
     if (eth + 1 > (struct ethhdr *)data_end)
@@ -96,6 +110,8 @@ int xdp_prog_main(struct xdp_md *ctx)
     {
         return XDP_PASS;
     }
+
+
 
     __u8 action = 0;
     __u64 blocktime = 1;
@@ -530,12 +546,13 @@ int xdp_prog_main(struct xdp_md *ctx)
                 continue;
             }
 
-            //bpf_printk("UDP PACKET SOURCE PORT: %d. dPORT: %d LENGTH: %d \n", htons(udph->source), htons(udph->dest), htons(udph->len));
-            
-            //bpf_printk("UDP CHECKSUM: 0x%x\n", ntohs(data_end));
+            int payload_size = ntohs(udph->len) - sizeof(struct udphdr);
+            unsigned char *payload = (unsigned char*)udph + sizeof(struct udphdr);
 
-            //bpf_printk("D: %d. D: %d \n", udph->dest, htons(filter->udpopts.dport));
-            // Source port.
+            if (payload + 4 * 4 +1 > (unsigned char *)data_end) {
+                return XDP_DROP;
+            }
+            
 
             // Source port.
             if (filter->udpopts.do_sport && htons(filter->udpopts.sport) != udph->source)
@@ -550,16 +567,52 @@ int xdp_prog_main(struct xdp_md *ctx)
                 continue;
             }
 
-            if (filter->udpopts.do_max_len && filter->udpopts.max_len < ntohs(udph->len))
+            if (filter->udpopts.do_max_len && filter->udpopts.max_len < payload_size)
             {
                 continue;
             }
 
-            if (filter->udpopts.do_min_len && filter->udpopts.min_len > ntohs(udph->len))
+            if (filter->udpopts.do_min_len && filter->udpopts.min_len > payload_size)
             {
                 continue;
             }
+
+
+            if (filter->udpopts.udp_hex_enabled) {
+                
+                if (hexa[1][2]<=payload_size){
+                    bpf_printk("Packet Size: %d", payload_size);
+                    
+                    // First Check
+                    if (hexa[0][0]){
+                        if (hexa[0][0] != payload[(hexa[1][0])]) {
+                            bpf_printk("Not Matched HEXA: %x || Payload: %x", hexa[0][0], payload[(hexa[1][0])]);
+                            continue;
+                        }
+                    }
+                    
+                
+                    // Second Check
+                    if (hexa[0][1]){
+                        if (hexa[0][1] != payload[(hexa[1][1])]) {
+                            bpf_printk("Not Matched HEXA: %x || Payload: %x", hexa[0][1], payload[(hexa[1][1])]);
+                            continue;
+                        }
+                    }
+
+                    
+                    // Third Check
+                    if (hexa[0][2]){
+                        if (hexa[0][2] != payload[(hexa[1][2])]) {
+                            bpf_printk("Not Matched HEXA: %x || Payload: %x", hexa[0][2], payload[(hexa[1][2])]);
+                            continue;
+                        }
+                    }
+
+                }
+            }
         }
+
         else if (filter->icmpopts.enabled)
         {
             if (icmph)
@@ -599,6 +652,7 @@ int xdp_prog_main(struct xdp_md *ctx)
         // Matched.
         #ifdef DEBUG
         bpf_printk("Matched rule ID #%d.\n", filter->id);
+        bpf_printk("Data: %d. ", data); 
         #endif
         
         action = filter->action;
@@ -606,7 +660,8 @@ int xdp_prog_main(struct xdp_md *ctx)
 
         goto matched;
     }
-            
+
+      
     return XDP_PASS;
 
     matched:

@@ -80,7 +80,9 @@ void setcfgdefaults(struct config *cfg)
         cfg->filters[i].udpopts.max_len = 65535;
         cfg->filters[i].udpopts.do_min_len = 0;
         cfg->filters[i].udpopts.min_len = 0;
-
+        cfg->filters[i].udpopts.udp_hex_enabled = 0;
+        //cfg->filters[i].udpopts.udp_pattern[0] = (udp_pattern_hex){0, 0, 0};
+        //cfg->filters[i].udpopts.udp_pattern[1] = (udp_pattern_hex){0, 0, 0};
         cfg->filters[i].icmpopts.enabled = 0;
         cfg->filters[i].icmpopts.do_code = 0;
         cfg->filters[i].icmpopts.do_type = 0;
@@ -134,6 +136,8 @@ int readcfg(struct config *cfg)
     config_setting_t *setting;
 
     config_init(&conf);
+
+
 
     // Attempt to read the config.
     if (config_read(&conf, file) == CONFIG_FALSE)
@@ -196,6 +200,7 @@ int readcfg(struct config *cfg)
 
     // Set filter count.
     int filters = 0;
+
 
     for (__u8 i = 0; i < config_setting_length(setting); i++)
     {
@@ -493,6 +498,32 @@ int readcfg(struct config *cfg)
             cfg->filters[i].udpopts.max_len = udp_max_len;
             cfg->filters[i].udpopts.do_max_len = 1;
         }
+
+        int udp_hex_enabled;
+
+        if (config_setting_lookup_bool(filter, "hex_enable", &udp_hex_enabled))
+        {
+            cfg->filters[i].udpopts.udp_hex_enabled = udp_hex_enabled;
+        }
+
+        /*
+        int hex_udp_pattern;
+        if (config_setting_lookup_int(filter, "udp_hex_pat", &hex_udp_pattern)) {
+            cfg->filters[i].udpopts.udp_pattern[0].a = (hex_udp_pattern >> 16) & 0xFF;
+            cfg->filters[i].udpopts.udp_pattern[0].b = (hex_udp_pattern >> 8) & 0xFF;
+            cfg->filters[i].udpopts.udp_pattern[0].c = hex_udp_pattern & 0xFF;
+        }
+
+        const char *hex_udp_pos;
+        if (config_setting_lookup_string(filter, "udp_hex_pos", &hex_udp_pos)) {
+        int a, b, c;
+            if (sscanf(hex_udp_pos, "%2d%2d%2d", &a, &b, &c) == 3) {
+            cfg->filters[i].udpopts.udp_pattern[1].a = a;
+            cfg->filters[i].udpopts.udp_pattern[1].b = b;
+            cfg->filters[i].udpopts.udp_pattern[1].c = c;
+            }
+        }
+        */
 
         /* ICMP options */
         // Enabled.

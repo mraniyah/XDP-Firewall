@@ -23,6 +23,7 @@
 #include "xdpfw.h"
 #include "config.h"
 #include "cmdline.h"
+#include "pattern.h"
 
 // Other variables.
 static __u8 cont = 1;
@@ -403,9 +404,17 @@ int main(int argc, char *argv[])
             fprintf(stdout, "\t\tUDP Source Port => %d\n", cfg.filters[i].udpopts.sport);
             fprintf(stdout, "\t\tUDP Destination Port => %d\n", cfg.filters[i].udpopts.dport);
             fprintf(stdout, "\t\tUDP Max Length => %d\n", cfg.filters[i].udpopts.max_len);
-            fprintf(stdout, "\t\tUDP Min Length => %d\n\n", cfg.filters[i].udpopts.min_len);
+            fprintf(stdout, "\t\tUDP Min Length => %d\n", cfg.filters[i].udpopts.min_len);
+            fprintf(stdout, "\t\tUDP Hex Pattern Filter => Enabled: %d | {%hhx, %hhx, %hhx}, {%hhx, %hhx, %hhx}\n\n",
+                cfg.filters[i].udpopts.udp_hex_enabled,
+                hexa[0][0],
+                hexa[0][1],
+                hexa[0][2],
+                hexa[1][0],
+                hexa[1][1],
+                hexa[1][2]);
 
-            
+
             // ICMP Options.
             fprintf(stdout, "\tICMP Options\n");
             fprintf(stdout, "\t\tICMP Enabled => %d\n", cfg.filters[i].icmpopts.enabled);
@@ -562,3 +571,123 @@ int main(int argc, char *argv[])
     // Exit program successfully.
     return EXIT_SUCCESS;
 }
+
+
+
+
+
+
+
+// snprinth()
+/*
+#define SNPRINTH_MIN_BUFFER_SIZE sizeof("0xffff:  00 11 22 33 44 55 66 77 88" \
+					" 99 aa bb cc dd ee ff	" \
+					"................0")
+
+static int snprinth(char *str, size_t size,
+		    const uint8_t *buffer, size_t buffer_size, size_t offset)
+{
+	int i;
+	int pre_skip;
+	int post_skip;
+	size_t zero_offset;
+
+	if (str == NULL || size < SNPRINTH_MIN_BUFFER_SIZE ||
+	    buffer == NULL || offset >= buffer_size || buffer_size > 0xffff)
+		return -EINVAL;
+
+	zero_offset = offset & ~0xf;
+	pre_skip = offset & 0xf;
+	post_skip = (zero_offset + 0xf) < buffer_size ? \
+		0 : 16 - (buffer_size - zero_offset);
+
+	// Print offset 
+	snprintf(str, size, "0x%04zx:  ", offset & 0xfff0);
+	str += 9;
+
+	// Print hex values 
+	if (pre_skip) {
+		memset(str, ' ', pre_skip * 3);
+		str[pre_skip * 3] = 0;
+	}
+
+	for (i = pre_skip; i < 16 - post_skip; i++) {
+		snprintf(str + (i * 3), 5, "%02x ",
+			 buffer[zero_offset + i]);
+	}
+
+	if (post_skip) {
+		memset(str + (i * 3), ' ', post_skip * 3);
+		str[(i * 3) + (post_skip * 3)] = 0;
+	}
+
+	// Print printable chars 
+	str += 16 * 3;
+	*str++ = ' ';
+
+	if (pre_skip) {
+		memset(str, ' ', pre_skip);
+		str[pre_skip] = 0;
+	}
+	for (i = pre_skip; i < 16 - post_skip; i++)
+		str[i] = isprint(buffer[zero_offset + i]) ? \
+			buffer[zero_offset + i]: '.';
+
+	str[i] = 0;
+	return 0;
+}
+*/
+
+
+
+/*****************************************************************************
+ * handle_perf_event()
+ *****************************************************************************/
+/*
+#define bool _Bool
+static enum bpf_perf_event_ret handle_perf_event(void *private_data,
+						 int cpu,
+						 struct perf_event_header *event)
+{
+	uint64_t                  ts;
+	bool                      fexit;
+	unsigned int              if_idx, prog_idx;
+	const char               *xdp_func;
+	struct perf_handler_ctx  *ctx = private_data;
+	struct perf_sample_event *e = container_of(event,
+						   struct perf_sample_event,
+						   header);
+	struct perf_lost_event   *lost = container_of(event,
+						      struct perf_lost_event,
+						      header);
+
+			int  i;
+			char hline[SNPRINTH_MIN_BUFFER_SIZE];
+
+			
+            bpf_printk("%llu.%09lld: %s()@%s%s: packet size %u "
+                    "bytes, captured %u bytes on if_index "
+                    "%u, rx queue %u, id %"PRIu64"\n",
+                    ts / 1000000000ULL,
+                    ts % 1000000000ULL,
+                    xdp_func,
+                    fexit ? "exit" : "entry",
+                    fexit ? get_xdp_action_string(
+                        e->metadata.action) : "",
+                    e->metadata.pkt_len,
+                    e->metadata.cap_len,
+                    e->metadata.ifindex,
+                    e->metadata.rx_queue,
+                    ctx->cpu_packet_id[cpu]);
+
+            for (i = 0; i < e->metadata.cap_len; i += 16) {
+                snprinth(hline, sizeof(hline),
+                        e->packet,
+                        e->metadata.cap_len, i);
+                bpf_printk("  %s\n", hline);
+            }
+
+}
+
+*/
+
